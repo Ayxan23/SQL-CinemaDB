@@ -28,18 +28,44 @@ VALUES('Black', 120),
 	('Blue', 140),
 	('Green', 90)
 
---LanguageMovies
-CREATE TABLE LanguageMovies(
+--Genres
+CREATE TABLE Genres(
 	Id INT PRIMARY KEY IDENTITY,
-	LanguageId INT FOREIGN KEY REFERENCES Languages(Id),
-	MovieId INT FOREIGN KEY REFERENCES Movies(Id)
+	GenreName NVARCHAR(255),
 )
 
-INSERT INTO LanguageMovies
-VALUES(1, 4),
-	(2, 3),
-	(3, 2),
-	(4, 1)
+INSERT INTO Genres
+VALUES('Sci Fi'),
+	('Horror'),
+	('Comedy'),
+	('Drama')
+
+--Actors
+CREATE TABLE Actors(
+	Id INT PRIMARY KEY IDENTITY,
+	ActorsName NVARCHAR(255),
+)
+
+INSERT INTO Actors
+VALUES('Johnny Depp'),
+	('Brad Pitt'),
+	('Charlize Theron'),
+	('Scarlett Johansson')
+
+--InfoMovies
+CREATE TABLE InfoMovies(
+	Id INT PRIMARY KEY IDENTITY,
+	LanguageId INT FOREIGN KEY REFERENCES Languages(Id),
+	MovieId INT FOREIGN KEY REFERENCES Movies(Id),
+	GenreId INT FOREIGN KEY REFERENCES Genres(Id),
+	ActorId INT FOREIGN KEY REFERENCES Actors(Id)
+)
+
+INSERT INTO InfoMovies
+VALUES(1, 4, 1, 4),
+	(2, 3, 2, 3),
+	(3, 2, 3, 2),
+	(4, 1, 4, 1)
 
 --Halls
 CREATE TABLE Halls(
@@ -69,15 +95,15 @@ VALUES('2023.02.15 15:40:45', '2023.02.15 17:40:45'),
 	('2023.02.15 15:40:45', '2023.02.15 17:40:45')
 
 --LagMovSes
-CREATE TABLE LagMovSes(
+CREATE TABLE InfoCinema(
 	Id INT PRIMARY KEY IDENTITY,
-	LanguageMovieId INT FOREIGN KEY REFERENCES LanguageMovies(Id),
+	InfoMovieId INT FOREIGN KEY REFERENCES InfoMovies(Id),
 	HallId INT FOREIGN KEY REFERENCES Halls(Id),
 	SessionsId INT FOREIGN KEY REFERENCES Sessions(Id),
 	Price DECIMAL(7,2)
 )
 
-INSERT INTO LagMovSes
+INSERT INTO InfoCinema
 VALUES(3, 1, 2, 5.5),
 	(2, 4, 1, 6.5),
 	(1, 2, 4, 7.5),
@@ -89,7 +115,7 @@ CREATE TABLE BuyTicket(
 	Row INT,
 	Colum INT,
 	IsEmpty BIT,
-	LagMovSesId INT FOREIGN KEY REFERENCES LagMovSes(Id),
+	InfoCinemaId INT FOREIGN KEY REFERENCES InfoCinema(Id),
 )
 
 INSERT INTO BuyTicket
@@ -98,21 +124,40 @@ VALUES(9, 5, 1, 1),
 	(4, 8, 0, 3),
 	(6, 5, 1, 4)
 
+--Customers
+CREATE TABLE Customers(
+	Id INT PRIMARY KEY IDENTITY,
+	CustomerName NVARCHAR(255),
+	TicketId INT FOREIGN KEY REFERENCES BuyTicket(Id),
+)
+
+INSERT INTO Customers
+VALUES('Ayxan', 1),
+	('Fikret', 2),
+	('Nuray', 3),
+	('Aysel', 4)
+
 CREATE VIEW ticket_info
 AS
-SELECT Movies.MovieName, Languages.LanguageName, Halls.HallName, Sessions.StartTime, Sessions.EndTime, LagMovSes.Price, BuyTicket.Row, BuyTicket.Colum FROM BuyTicket
-JOIN LagMovSes 
-ON BuyTicket.LagMovSesId = LagMovSes.Id
-JOIN LanguageMovies
-ON LagMovSes.LanguageMovieId = LanguageMovies.Id
+SELECT Customers.CustomerName, Movies.MovieName, Genres.GenreName, Actors.ActorsName, Languages.LanguageName, Sessions.StartTime, Sessions.EndTime, Halls.HallName, BuyTicket.Row, BuyTicket.Colum, InfoCinema.Price FROM Customers
+JOIN BuyTicket
+ON Customers.TicketId = BuyTicket.Id
+JOIN InfoCinema 
+ON BuyTicket.InfoCinemaId = InfoCinema.Id
+JOIN InfoMovies
+ON InfoCinema.InfoMovieId = InfoMovies.Id
 JOIN Halls
-ON LagMovSes.HallId = Halls.Id
+ON InfoCinema.HallId = Halls.Id
 JOIN Sessions
-ON LagMovSes.SessionsId = Sessions.Id
+ON InfoCinema.SessionsId = Sessions.Id
 JOIN Movies 
-ON LanguageMovies.MovieId = Movies.Id
+ON InfoMovies.MovieId = Movies.Id
 JOIN Languages
-ON LanguageMovies.LanguageId = Languages.Id
+ON InfoMovies.LanguageId = Languages.Id
+JOIN Genres
+ON InfoMovies.GenreId = Genres.Id
+JOIN Actors
+ON InfoMovies.ActorId = Actors.Id
 
 SELECT * FROM ticket_info
 
